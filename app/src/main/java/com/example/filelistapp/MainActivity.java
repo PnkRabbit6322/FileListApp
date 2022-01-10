@@ -6,6 +6,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -25,6 +26,9 @@ public class MainActivity extends AppCompatActivity {
     Button button1;
     ListView fileList;
     TextView textView;
+    ArrayAdapter adapter;
+    ArrayList<String> myList;
+    ArrayList<String> filePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,13 +48,15 @@ public class MainActivity extends AppCompatActivity {
         fileList = findViewById(R.id.fileList);
         textView = findViewById(R.id.textView);
 
-        ArrayList<String> myList = new ArrayList<>();
+        myList = new ArrayList<>();
+        filePath = new ArrayList<>();
 
-        ArrayAdapter adapter = new ArrayAdapter<>(this, R.layout.activity_listview, myList);
+        adapter = new ArrayAdapter<>(this, R.layout.activity_listview, myList);
         fileList.setAdapter(adapter);
 
         button1.setOnClickListener(view -> {
             String folderToList = Environment.getExternalStorageDirectory().getAbsolutePath() + "/";
+            filePath.add(folderToList);
             File folderFile = new File(folderToList);
             myList.clear();
             if (folderFile.isDirectory()) {
@@ -79,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
         fileList.setOnItemClickListener((adapterView, view, i, l) -> {
             Object o = fileList.getItemAtPosition(i);
             String folderToList = o.toString() + "/";
-            Log.v("TAG", folderToList);
+            filePath.add(folderToList);
             File folderFile = new File(folderToList);
             myList.clear();
             if (folderFile.isDirectory()) {
@@ -115,5 +121,27 @@ public class MainActivity extends AppCompatActivity {
                 Log.v("TAG", "Permission granted");
             else
                 Log.v("TAG", "Permission denied");
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if(filePath.size() != 0) {
+                filePath.remove(filePath.size() - 1);
+                String folderToList = filePath.get(filePath.size() - 1);
+                File folderFile = new File(folderToList);
+                myList.clear();
+                if (folderFile.isDirectory()) {
+                    File[] files = folderFile.listFiles();
+                    assert files != null;
+                    for (File f : files) {
+                        myList.add(f.getAbsolutePath());
+                    }
+                    adapter.notifyDataSetChanged();
+                }
+            }
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 }
